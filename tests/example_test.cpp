@@ -1,4 +1,5 @@
 #include <example/tools.h>
+#include <header_example/tools.h>
 
 #include <gtest/gtest.h>
 
@@ -42,4 +43,14 @@ TEST(TestExamples, ExceptionTest)
     };
     EXPECT_THROW(lambda(), std::exception);
     EXPECT_THROW(lambda(1), std::overflow_error);
+}
+
+TEST(TestExamples, ExampleLibraryTest)
+{
+    EXPECT_EQ(example::tools::GetNumber(), 13);
+}
+
+TEST(TestExamples, ExampleHeaderLibraryTest)
+{
+    EXPECT_EQ(header_example::tools::GetNumber(), 14);
 }
