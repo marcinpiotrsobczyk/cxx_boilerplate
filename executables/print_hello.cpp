@@ -3,7 +3,7 @@
 
 int main()
 {
-    example::tools::print_hello();
+    example::tools::PrintHello();
 
     return 0;
 }

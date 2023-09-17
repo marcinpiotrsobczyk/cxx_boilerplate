@@ -1,7 +1,8 @@
-cmake_minimum_required(VERSION 3.16..3.24)
+cmake_minimum_required(VERSION 3.16)
 project(cxx_boilerplate VERSION 0.0.1
                     DESCRIPTION "cxx project boilerplate"
                     LANGUAGES CXX)
+
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "" FORCE)
 endif()
@@ -14,5 +15,10 @@ target_compile_features(cxx_setup INTERFACE cxx_std_17)
 target_include_directories(cxx_setup
     INTERFACE ${PROJECT_SOURCE_DIR}/include)
 
-add_subdirectory(executables)
+include(cmake/UpdateSubmodules.cmake)
+include(CTest)
+
 add_subdirectory(src)
+add_subdirectory(executables)
+add_subdirectory(external)
+add_subdirectory(tests)
