@@ -6,4 +6,5 @@ find_package(Threads REQUIRED)
 
 target_link_libraries(test_tools Threads::Threads)
 
-target_include_directories(test_tools PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include") 
+target_include_directories(test_tools PUBLIC
+  "${CMAKE_CURRENT_SOURCE_DIR}/include")
