@@ -31,20 +31,21 @@ build_example:
     - apt update && apt install -y git build-essential cmake
     - cmake -B build -D CMAKE_BUILD_TYPE=Debug
     - cmake --build build
-    - build/tests/example_test
+    - build/tests/example_test --gtest_shuffle --gtest_repeat=10
     - sleep 10
   artifacts:
       name: "$CI_JOB_NAME"
       paths:
-        - build/
+        - build/tests/example_test
+        - build/tests/second_example_test
 
 
 test_example:
   stage:
     test
   script:
-    - ls -lathR build_example
-    - time external/gtest-parallel/gtest-parallel build_example/build/tests/example_test --repeat=1000 --workers=10
+    - apt update && apt install python3 python-is-python3 pip -y
+    - time external/gtest-parallel/gtest-parallel build/tests/second_example_test --repeat=7 --workers=$(nproc)
   dependencies: [build_example]
 
 
@@ -59,7 +60,7 @@ postgres_service_example:
     POSTGRES_USER: custom_user
     POSTGRES_PASSWORD: custom_pass
   script:
-    - apt update && apt install python3 python_is_python3 pip
+    - apt update && apt install python3 python-is-python3 pip -y
     - pip install --upgrade pip
     - pip install "psycopg[binary,pool]"
     - pip install pgcli

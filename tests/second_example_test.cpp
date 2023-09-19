@@ -1,5 +1,6 @@
 #include <example/tools.h>
 #include <header_example/tools.h>
+#include <test_tools/test_tools.h>
 
 #include <gtest/gtest.h>
 
@@ -10,11 +11,11 @@ namespace {
     int GetMeaningOfLife() { return 42; }
 }
 
-TEST(ExampleTest, ExampleTest) {
+TEST(SecondExampleTest, ExampleTest) {
     EXPECT_EQ(GetMeaningOfLife(), 42);
 }
 
-TEST(ExampleTest, IsNullTest)
+TEST(SecondExampleTest, IsNullTest)
 {
     int* nullPtr = nullptr;
     int* notNullPtr = new int;
@@ -28,7 +29,7 @@ TEST(ExampleTest, IsNullTest)
     delete notNullPtr;
 }
 
-TEST(ExampleTest, ExceptionTest)
+TEST(SecondExampleTest, ExceptionTest)
 {
     auto lambda = [](int i = 0)
     {
@@ -45,12 +46,22 @@ TEST(ExampleTest, ExceptionTest)
     EXPECT_THROW(lambda(1), std::overflow_error);
 }
 
-TEST(ExampleTest, ExampleLibraryTest)
+TEST(SecondExampleTest, ExampleLibraryTest)
 {
     EXPECT_EQ(example::tools::GetNumber(), 13);
 }
 
-TEST(ExampleTest, ExampleHeaderLibraryTest)
+TEST(SecondExampleTest, ExampleHeaderLibraryTest)
 {
     EXPECT_EQ(header_example::tools::GetNumber(), 14);
+}
+
+TEST(SecondExampleTest, ExampleHTestToolsTest)
+{
+    EXPECT_EQ(tests::test_tools::GetNumber(), 15);
+}
+
+TEST(SecondExampleTest, ExampleThreadedFunctionTest)
+{
+    EXPECT_EQ(tests::test_tools::ThreadedFunction(), 16);
 }
