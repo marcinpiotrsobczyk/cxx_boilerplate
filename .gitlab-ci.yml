@@ -66,3 +66,24 @@ example_service:
     - pip install "psycopg[binary,pool]"
     - pip install pgcli
     - echo "SELECT VERSION();" | pgcli "postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@db:5432/$POSTGRES_DB"
+
+
+clang_format:
+  stage: test
+  needs: []
+  script:
+    - apt update && apt install -y git build-essential cmake clang-format clang-tidy
+    - find . -not \( -path external -prune \) -name "*.cpp" -o -name "*.h" -o -name "*.hpp"
+    - find . -not \( -path external -prune \) -name "*.cpp" -o -name "*.h" -o -name "*.hpp" |
+      xargs -n 1 clang-format -style=llvm --dry-run -Werror
+
+
+cmakelint:
+  stage: test
+  needs: []
+  script:
+    - apt update && apt install python3 python-is-python3 pip -y
+    - pip install --upgrade pip
+    - pip install cmakelint
+    - find . -not \( -path external -prune \) -name "CMakeLists.txt" | xargs -I {} cmakelint {}
+    
