@@ -1,2 +1,2 @@
-add_subdirectory(example_appbase)
+add_subdirectory(example_application)
 add_subdirectory(print_hello)
