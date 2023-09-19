@@ -1,0 +1,30 @@
+name: Unit tests
+
+on: [push, pull_request]
+
+env:
+  IMAGE_NAME: ubuntu
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    env:
+      CC: gcc
+      CXX: g++
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: >
+          sudo apt install -y git build-essential cmake
+
+      - name: Build with CMake
+        run: |
+          cmake -B build
+          cmake --build build
+
+      - name: Run google tests
+        run: |
+          build/tests/example_test --gtest_repeat=10 --gtest_shuffle
