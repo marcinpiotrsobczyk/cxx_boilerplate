@@ -1,10 +1,10 @@
-#include <test_tools/test_tools.h>
+#include <test_tools/tools.hpp>
 
 #include <chrono>
 #include <thread>
 
 
-namespace tests { namespace test_tools {
+namespace test_tools {
 
     void PrintHello(std::string str /* = "from test tools" */)
     {
@@ -19,11 +19,11 @@ namespace tests { namespace test_tools {
     {
         using namespace std::chrono_literals;
         auto lambda = [] () {
-            std::this_thread::sleep_for(60000ms);
+            std::this_thread::sleep_for(5000ms);
             return 16;
         };
         int value = lambda();
         return value;
     }
 
-} }
+}

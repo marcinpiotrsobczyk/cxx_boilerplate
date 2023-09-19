@@ -1,6 +1,6 @@
-#include <example/tools.h>
-#include <header_example/tools.h>
-#include <test_tools/test_tools.h>
+#include <example/tools.hpp>
+#include <example_header_only/tools.hpp>
+#include <test_tools/tools.hpp>
 
 #include <gtest/gtest.h>
 
@@ -48,20 +48,35 @@ TEST(SecondExampleTest, ExceptionTest)
 
 TEST(SecondExampleTest, ExampleLibraryTest)
 {
-    EXPECT_EQ(example::tools::GetNumber(), 13);
+    EXPECT_EQ(example::GetNumber(), 13);
 }
 
-TEST(SecondExampleTest, ExampleHeaderLibraryTest)
+TEST(SecondExampleTest, ExampleHeaderOnlyLibraryTest)
 {
-    EXPECT_EQ(header_example::tools::GetNumber(), 14);
+    EXPECT_EQ(example_header_only::GetNumber(), 14);
 }
 
 TEST(SecondExampleTest, ExampleHTestToolsTest)
 {
-    EXPECT_EQ(tests::test_tools::GetNumber(), 15);
+    EXPECT_EQ(test_tools::GetNumber(), 15);
 }
 
 TEST(SecondExampleTest, ExampleThreadedFunctionTest)
 {
-    EXPECT_EQ(tests::test_tools::ThreadedFunction(), 16);
+    EXPECT_EQ(test_tools::ThreadedFunction(), 16);
+}
+
+TEST(SecondExampleTest, ExampleThreadedFunction2Test)
+{
+    EXPECT_EQ(test_tools::ThreadedFunction(), 16);
+}
+
+TEST(SecondExampleTest, ExampleThreadedFunction3Test)
+{
+    EXPECT_EQ(test_tools::ThreadedFunction(), 16);
+}
+
+TEST(SecondExampleTest, ExampleThreadedFunction4Test)
+{
+    EXPECT_EQ(test_tools::ThreadedFunction(), 16);
 }

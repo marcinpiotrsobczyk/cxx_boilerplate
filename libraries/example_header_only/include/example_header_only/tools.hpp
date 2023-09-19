@@ -4,7 +4,7 @@
 #include <string>
 
 
-namespace header_example { namespace tools {
+namespace example_header_only {
 
     void PrintHello(std::string str = "from header") {
         std::cout << "hello " << str << std::endl;
@@ -13,4 +13,4 @@ namespace header_example { namespace tools {
         return 14;
     }
 
-} }
+}

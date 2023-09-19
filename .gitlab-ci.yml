@@ -24,7 +24,7 @@ stages:
   - deploy
 
 
-build_example:
+example_build:
   stage:
     build
   script:
@@ -40,16 +40,17 @@ build_example:
         - build/tests/second_example_test
 
 
-test_example:
+example_test:
   stage:
     test
   script:
     - apt update && apt install python3 python-is-python3 pip -y
-    - time external/gtest-parallel/gtest-parallel build/tests/second_example_test --repeat=7 --workers=$(nproc)
-  dependencies: [build_example]
+    - time build/tests/second_example_test
+    - time external/gtest-parallel/gtest-parallel build/tests/second_example_test --workers=$(nproc)
+  dependencies: [example_build]
 
 
-postgres_service_example:
+example_service:
   stage:
     test
   services:

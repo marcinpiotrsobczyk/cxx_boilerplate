@@ -1,7 +1,7 @@
-#include <example/tools.h>
+#include <example/tools.hpp>
 
 
-namespace example { namespace tools {
+namespace example {
 
     void PrintHello(std::string str /* = "world" */)
     {
@@ -13,4 +13,4 @@ namespace example { namespace tools {
         return 13;
     }
 
-} }
+}

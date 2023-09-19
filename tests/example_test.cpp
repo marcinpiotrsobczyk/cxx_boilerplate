@@ -1,5 +1,5 @@
-#include <example/tools.h>
-#include <header_example/tools.h>
+#include <example/tools.hpp>
+#include <example_header_only/tools.hpp>
 
 #include <gtest/gtest.h>
 
@@ -47,10 +47,10 @@ TEST(ExampleTest, ExceptionTest)
 
 TEST(ExampleTest, ExampleLibraryTest)
 {
-    EXPECT_EQ(example::tools::GetNumber(), 13);
+    EXPECT_EQ(example::GetNumber(), 13);
 }
 
-TEST(ExampleTest, ExampleHeaderLibraryTest)
+TEST(ExampleTest, ExampleHeaderOnlyLibraryTest)
 {
-    EXPECT_EQ(header_example::tools::GetNumber(), 14);
+    EXPECT_EQ(example_header_only::GetNumber(), 14);
 }
