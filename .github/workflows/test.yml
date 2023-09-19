@@ -1,12 +1,12 @@
 name: Unit tests
 
-on: [push, pull_request]
+on: [push]
 
 env:
   IMAGE_NAME: ubuntu
 
 jobs:
-  test:
+  build_and_test:
     runs-on: ubuntu-latest
 
     env:
@@ -28,3 +28,30 @@ jobs:
       - name: Run google tests
         run: |
           build/tests/example_test --gtest_repeat=10 --gtest_shuffle
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: example
+          path: build
+
+  second_test:
+    needs: build_and_test
+    runs-on: ubuntu-latest
+
+    env:
+      CC: gcc
+      CXX: g++
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: example
+          path: build
+
+      - name: Run google tests second
+        run: |
+          find . -maxdepth 3
+          chmod a+x build/tests/second_example_test
+          build/tests/second_example_test --gtest_repeat=2 --gtest_shuffle
