@@ -1,4 +1,4 @@
-FROM ubuntu:22.04 AS base_image
+FROM ubuntu:22.04 AS boilerplate_base_image
 
 RUN apt update && apt install -y \
     git \
@@ -24,6 +24,7 @@ RUN apt update && apt install -y \
     libcrypto++-dev \
     libfmt-dev \
     libboost-date-time-dev \
+    libboost-all-dev \
     jq \
     docker.io \
     wget \
@@ -31,23 +32,14 @@ RUN apt update && apt install -y \
     iputils-ping \
     ncat \
     postgresql-client \
-    xvfb  && rm -rf /var/lib/apt/lists/*
+    xvfb && rm -rf /var/lib/apt/lists/*
 
-# extra stuff
-RUN apt update && apt install -y \
-    libenet-dev \
-    jq \
-    docker.io \
-    curl \
-    iputils-ping \
-    xvfb \
-    postgresql-client && rm -rf /var/lib/apt/lists/*
+FROM boilerplate_base_image AS build
 
-COPY godot-gdscript-toolkit /godot-gdscript-toolkit
+COPY . /src
+RUN cd /src && git clean -xfd
+RUN cmake -S /src -B /build -D CMAKE_BUILD_TYPE=Debug && cmake --build /build
 
-RUN python -m pip install --upgrade pip
-RUN cd godot-gdscript-toolkit && python -m pip install .
-RUN python -m pip install scons pyenet ipython jsonschema jinja2 pytest tavern cmakelint
-RUN git config --global --add safe.directory "*"
-
-FROM base_image AS cxx_base_image
+FROM boilerplate_base_image AS boilerplate_image
+COPY --from=build /src /src
+COPY --from=build /build /build
