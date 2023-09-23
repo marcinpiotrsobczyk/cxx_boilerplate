@@ -1,2 +1,3 @@
 add_subdirectory(example_application)
+add_subdirectory(example_cli)
 add_subdirectory(print_hello)
