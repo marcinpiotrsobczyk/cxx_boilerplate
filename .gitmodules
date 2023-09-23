@@ -4,3 +4,6 @@
 [submodule "external/gtest-parallel"]
 	path = external/gtest-parallel
 	url = https://github.com/google/gtest-parallel.git
+[submodule "external/cli"]
+	path = external/cli
+	url = https://github.com/daniele77/cli
