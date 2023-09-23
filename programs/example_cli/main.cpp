@@ -2,7 +2,8 @@
 #include <example_header_only/tools.hpp>
 
 #include <cli/cli.h>
-#include <cli/clifilesession.h>
+#include "cli/clilocalsession.h"
+#include <cli/loopscheduler.h>
 
 #include <memory>
 #include <ostream>
@@ -58,8 +59,16 @@ int main() {
     // global exit action
     cli.ExitAction( [](auto& out){ out << "Goodbye and thanks for all the fish.\n"; } );
 
-    cli::CliFileSession input(cli);
-    input.Start();
+    cli::LoopScheduler scheduler;
+    cli::CliLocalTerminalSession session(cli, scheduler, std::cout, 200);
+    session.ExitAction(
+        [&scheduler](auto& out) // session exit action
+        {
+            out << "Closing App...\n";
+            scheduler.Stop();
+        }
+    );
+    scheduler.Run();
 
 
   return 0;
