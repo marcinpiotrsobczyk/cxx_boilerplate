@@ -6,6 +6,7 @@
 #include <cli/boostasioremotecli.h>
 #include <cli/boostasioscheduler.h>
 
+#include <iostream>
 #include <memory>
 #include <ostream>
 
@@ -69,8 +70,25 @@ int main() {
             scheduler.Stop();
         }
     );
-    cli::BoostAsioCliTelnetServer server(cli, scheduler, 5000);
-    scheduler.Run();
+    cli::BoostAsioCliTelnetServer server(cli, scheduler, "127.0.0.1", 9123, 200);
+    server.ExitAction(
+        [&scheduler](auto& out) // session exit action
+        {
+            out << "Closing Remote Telnet Session...\n";
+            // scheduler.Stop();
+        }
+    );
+    try {
+      scheduler.Run();
+    } catch (std::exception& e) {
+      std::cerr << "Exception caugth in main: " << e.what() << '\n';
+      return 1;
+    }
+    catch (...)
+    {
+    std::cerr << "Unknown exception caugth in main.\n";
+      return 2;
+    }
 
 
   return 0;
