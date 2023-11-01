@@ -1,4 +1,4 @@
-FROM ubuntu:22.04 AS boilerplate_base_image
+FROM ubuntu:22.04 AS cxx_boilerplate_base_image
 
 RUN apt update && apt install -y \
     git \
@@ -34,12 +34,12 @@ RUN apt update && apt install -y \
     postgresql-client \
     xvfb && rm -rf /var/lib/apt/lists/*
 
-FROM boilerplate_base_image AS build
+FROM cxx_boilerplate_base_image AS build
 
 COPY . /src
 RUN cd /src && git clean -xfd
 RUN cmake -S /src -B /build -D CMAKE_BUILD_TYPE=Debug && cmake --build /build
 
-FROM boilerplate_base_image AS boilerplate_image
+FROM cxx_boilerplate_base_image AS cxx_boilerplate_image
 COPY --from=build /src /src
 COPY --from=build /build /build
