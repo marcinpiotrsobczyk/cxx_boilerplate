@@ -7,3 +7,6 @@
 [submodule "external/cli"]
 	path = external/cli
 	url = https://github.com/daniele77/cli
+[submodule "external/glaze"]
+	path = external/glaze
+	url = https://github.com/stephenberry/glaze.git
