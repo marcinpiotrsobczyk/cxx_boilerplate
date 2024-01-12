@@ -10,15 +10,15 @@ if(BUILD_TESTING)
     include(GoogleTest)
     gtest_discover_tests(example_test)
 
-    add_executable(second_example_test second_example_test.cpp)
-    target_link_libraries(second_example_test PUBLIC cxx_setup)
-    target_link_libraries(second_example_test PUBLIC example)
-    target_link_libraries(second_example_test PUBLIC example_header_only)
-    target_link_libraries(second_example_test PUBLIC test_tools)
-    target_link_libraries(second_example_test PRIVATE GTest::gtest_main)
+    add_executable(example2_test example2_test.cpp)
+    target_link_libraries(example2_test PUBLIC cxx_setup)
+    target_link_libraries(example2_test PUBLIC example)
+    target_link_libraries(example2_test PUBLIC example_header_only)
+    target_link_libraries(example2_test PUBLIC test_tools)
+    target_link_libraries(example2_test PRIVATE GTest::gtest_main)
 
     include(GoogleTest)
-    gtest_discover_tests(second_example_test)
+    gtest_discover_tests(example2_test)
 
     # add_test(basic_example_test example_test
     #          example_test)
