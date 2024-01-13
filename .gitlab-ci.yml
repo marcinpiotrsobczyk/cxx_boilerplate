@@ -28,6 +28,7 @@ stages:
 build:
   stage:
     build
+  needs: []
   script:
     - apt update && apt install -y git build-essential cmake libboost-all-dev
     - cmake -B build -D CMAKE_BUILD_TYPE=Debug
