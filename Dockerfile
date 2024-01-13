@@ -6,6 +6,7 @@ RUN apt update && apt install -y \
     make \
     gcc \
     g++ \
+    clang \
     build-essential \
     clang-format \
     clang-tidy \

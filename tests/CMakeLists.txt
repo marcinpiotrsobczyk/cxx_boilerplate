@@ -20,6 +20,16 @@ if(BUILD_TESTING)
     include(GoogleTest)
     gtest_discover_tests(example2_test)
 
+    add_executable(address_invalid_test address_invalid_test.cpp)
+    target_link_libraries(address_invalid_test PUBLIC cxx_setup)
+    target_link_libraries(address_invalid_test PUBLIC example)
+    target_link_libraries(address_invalid_test PUBLIC example_header_only)
+    target_link_libraries(address_invalid_test PUBLIC test_tools)
+    target_link_libraries(address_invalid_test PRIVATE GTest::gtest_main)
+
+    include(GoogleTest)
+    gtest_discover_tests(address_invalid_test)
+
     # add_test(basic_example_test example_test
     #          example_test)
 endif()

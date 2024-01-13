@@ -1,2 +1,2 @@
-add_executable(show_boost_version show_boost_version.cpp)
-target_link_libraries(show_boost_version cxx_setup)
+add_executable(show_version show_version.cpp)
+target_link_libraries(show_version cxx_setup)

@@ -12,6 +12,11 @@ add_library(cxx_setup INTERFACE)
 target_compile_options(cxx_setup INTERFACE -Wall -Wpedantic -Wextra)
 target_compile_features(cxx_setup INTERFACE cxx_std_17)
 
+if(SANITIZE_ADDRESS)
+    add_compile_options(-fsanitize=address)
+    add_link_options(-fsanitize=address)
+endif()
+
 include(cmake/UpdateSubmodules.cmake)
 include(CTest)
 

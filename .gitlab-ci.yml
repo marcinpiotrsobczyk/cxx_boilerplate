@@ -20,18 +20,41 @@ variables:
   FF_NETWORK_PER_BUILD: "true"
 stages:
   - build_base_image
+  - lint
   - build
+  - profile
+  - sanitize
   - test
   - deploy
   - manual
 
 
-build:
+clang_format:
+  stage: lint
+  needs: []
+  script:
+    - find . -not \( -path ./external -prune \) -not \( -path ./libraries/appbase -prune \) -name "*.cpp" -o -name "*.cc" -o -name "*.h" -o -name "*.hpp"
+    - find . -not \( -path ./external -prune \) -not \( -path ./libraries/appbase -prune \) -name "*.cpp" -o -name "*.cc" -o -name "*.h" -o -name "*.hpp" |
+      xargs -n 1 clang-format -style=llvm --dry-run -Werror
+
+
+cmakelint:
+  stage: lint
+  needs: []
+  script:
+    - pip install --upgrade pip
+    - pip install cmakelint
+    - find . -not \( -path ./external -prune \) -not \( -path ./libraries/appbase -prune \) -name "CMakeLists.txt" | xargs -I {} cmakelint {}
+
+
+build_gcc:
   stage:
     build
+  variables:
+    CC: "/usr/bin/gcc"
+    CXX: "/usr/bin/g++"
   script:
-    - apt update && apt install -y git build-essential cmake libboost-all-dev
-    - rm build -r
+    - rm build -rf
     - cmake -B build -D CMAKE_BUILD_TYPE=Debug
     - cmake --build build
   artifacts:
@@ -40,62 +63,20 @@ build:
         - build
 
 
-example_test:
+build_clang:
   stage:
-    test
-  script:
-    - apt update && apt install python3 python-is-python3 pip -y
-    - time build/tests/example_test --gtest_shuffle --gtest_repeat=10
-    - time build/tests/example2_test
-    - time external/gtest-parallel/gtest-parallel build/tests/example2_test --workers=$(nproc)
-  dependencies: [build]
-
-
-show_boost_version:
-  stage:
-    test
-  script:
-    - build/programs/tools/show_boost_version
-  dependencies: [build]
-
-
-clang_format:
-  stage: test
-  needs: []
-  script:
-    - apt update && apt install -y git build-essential cmake clang-format clang-tidy
-    - find . -not \( -path ./external -prune \) -not \( -path ./libraries/appbase -prune \) -name "*.cpp" -o -name "*.cc" -o -name "*.h" -o -name "*.hpp"
-    - find . -not \( -path ./external -prune \) -not \( -path ./libraries/appbase -prune \) -name "*.cpp" -o -name "*.cc" -o -name "*.h" -o -name "*.hpp" |
-      xargs -n 1 clang-format -style=llvm --dry-run -Werror
-
-
-cmakelint:
-  stage: test
-  needs: []
-  script:
-    - apt update && apt install python3 python-is-python3 pip -y
-    - pip install --upgrade pip
-    - pip install cmakelint
-    - find . -not \( -path ./external -prune \) -not \( -path ./libraries/appbase -prune \) -name "CMakeLists.txt" | xargs -I {} cmakelint {}
-
-
-example_service:
-  stage:
-    test
-  needs: []
-  services:
-    - name: postgres
-      alias: db
+    build
   variables:
-    POSTGRES_DB: custom_db
-    POSTGRES_USER: custom_user
-    POSTGRES_PASSWORD: custom_pass
+    CC: "/usr/bin/clang"
+    CXX: "/usr/bin/clang++"
   script:
-    - apt update && apt install python3 python-is-python3 pip -y
-    - pip install --upgrade pip
-    - pip install "psycopg[binary,pool]"
-    - pip install pgcli
-    - echo "SELECT VERSION();" | pgcli "postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@db:5432/$POSTGRES_DB"
+    - rm build -rf
+    - cmake -B build -D CMAKE_BUILD_TYPE=Debug
+    - cmake --build build
+  artifacts:
+      name: "$CI_JOB_NAME"
+      paths:
+        - build
 
 
 bind_build_cxx_boilerplate_base_image_automatic:
@@ -119,8 +100,150 @@ bind_build_cxx_boilerplate_base_image_automatic:
         - build
 
 
+google_benchmark:
+  stage:
+    test
+  script:
+    - time build/tests/example_test --gtest_shuffle --gtest_repeat=10
+    - time build/tests/example2_test
+    - time external/gtest-parallel/gtest-parallel build/tests/example2_test --workers=$(nproc)
+  dependencies: [build_gcc]
+
+
+cachegrind_valgrind:
+  stage:
+    profile
+  script:
+    - time build/tests/example_test --gtest_shuffle --gtest_repeat=10
+    - time build/tests/example2_test
+    - time external/gtest-parallel/gtest-parallel build/tests/example2_test --workers=$(nproc)
+  dependencies: [build_gcc]
+
+
+callgrind_valgrind:
+  stage:
+    profile
+  script:
+    - time build/tests/example_test --gtest_shuffle --gtest_repeat=10
+    - time build/tests/example2_test
+    - time external/gtest-parallel/gtest-parallel build/tests/example2_test --workers=$(nproc)
+  dependencies: [build_gcc]
+
+
+perf:
+  stage:
+    profile
+  script:
+    - time build/tests/example_test --gtest_shuffle --gtest_repeat=10
+    - time build/tests/example2_test
+    - time external/gtest-parallel/gtest-parallel build/tests/example2_test --workers=$(nproc)
+
+
+address_gcc:
+  stage:
+    sanitize
+  variables:
+    CC: "/usr/bin/gcc"
+    CXX: "/usr/bin/g++"
+  script:
+    - rm build -rff
+    - cmake -B build -D CMAKE_BUILD_TYPE=Debug -D SANITIZE_ADDRESS=ON
+    - cmake --build build --target address_invalid_test
+    - build/tests/address_invalid_test || true
+    - bash -c 'build/tests/address_invalid_test 2>&1 | grep stack-buffer-overflow'
+  artifacts:
+      name: "$CI_JOB_NAME"
+      paths:
+        - build
+
+
+memcheck_valgrind:
+  stage:
+    sanitize
+  variables:
+    CC: "/usr/bin/gcc"
+    CXX: "/usr/bin/g++"
+  script:
+    - rm build -rff
+    - cmake -B build -D CMAKE_BUILD_TYPE=Debug -D SANITIZE_ADDRESS=OFF
+    - cmake --build build --target address_invalid_test
+    - valgrind --leak-check=full --show-error-list=yes --show-leak-kinds=all --track-origins=yes --error-exitcode=87 build/tests/address_invalid_test || true
+    - bash -c 'valgrind --leak-check=full --show-error-list=yes --show-leak-kinds=all --track-origins=yes build/tests/address_invalid_test 2>&1 | grep "7 errors"'
+  artifacts:
+      name: "$CI_JOB_NAME"
+      paths:
+        - build
+
+
+hellgrind_valgrind:
+  stage:
+    sanitize
+  script:
+    - time build/tests/example_test --gtest_shuffle --gtest_repeat=10
+    - time build/tests/example2_test
+    - time external/gtest-parallel/gtest-parallel build/tests/example2_test --workers=$(nproc)
+  dependencies: [build_gcc]
+
+
+gcov:
+  stage:
+    sanitize
+  script:
+    - time build/tests/example_test --gtest_shuffle --gtest_repeat=10
+    - time build/tests/example2_test
+    - time external/gtest-parallel/gtest-parallel build/tests/example2_test --workers=$(nproc)
+  dependencies: [build_gcc]
+
+
+lcov:
+  stage:
+    sanitize
+  script:
+    - time build/tests/example_test --gtest_shuffle --gtest_repeat=10
+    - time build/tests/example2_test
+    - time external/gtest-parallel/gtest-parallel build/tests/example2_test --workers=$(nproc)
+  dependencies: [build_gcc]
+
+
+example_test:
+  stage:
+    test
+  script:
+    - time build/tests/example_test --gtest_shuffle --gtest_repeat=10
+    - time build/tests/example2_test
+    - time external/gtest-parallel/gtest-parallel build/tests/example2_test --workers=$(nproc)
+  dependencies: [build_gcc]
+
+
+example_service:
+  stage:
+    test
+  needs: []
+  services:
+    - name: postgres
+      alias: db
+  variables:
+    POSTGRES_DB: custom_db
+    POSTGRES_USER: custom_user
+    POSTGRES_PASSWORD: custom_pass
+  script:
+    - pip install --upgrade pip
+    - pip install "psycopg[binary,pool]"
+    - pip install pgcli
+    - echo "SELECT VERSION();" | pgcli "postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@db:5432/$POSTGRES_DB"
+
+
+show_version:
+  stage:
+    test
+  script:
+    - build/programs/tools/show_version
+  dependencies: [build_gcc]
+
+
 bind_build_cxx_boilerplate_base_image_manual:
   stage: manual
+  needs: []
   image: docker:24.0.1-cli
   rules:
     - when: manual
