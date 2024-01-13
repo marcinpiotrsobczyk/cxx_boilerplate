@@ -1,4 +1,4 @@
-FROM ubuntu:24.04 AS cxx_boilerplate_base_image
+FROM ubuntu:22.04 AS cxx_boilerplate_base_image
 
 RUN apt update && apt install -y \
     git \
@@ -33,7 +33,8 @@ RUN apt update && apt install -y \
     ncat \
     postgresql-client \
     xvfb \
-    gdb && rm -rf /var/lib/apt/lists/*
+    gdb \
+    valgrind && rm -rf /var/lib/apt/lists/*
 
 FROM cxx_boilerplate_base_image AS build
 
