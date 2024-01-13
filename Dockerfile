@@ -32,7 +32,8 @@ RUN apt update && apt install -y \
     iputils-ping \
     ncat \
     postgresql-client \
-    xvfb && rm -rf /var/lib/apt/lists/*
+    xvfb \
+    gdb && rm -rf /var/lib/apt/lists/*
 
 FROM cxx_boilerplate_base_image AS build
 
