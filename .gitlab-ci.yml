@@ -19,6 +19,7 @@ variables:
   CI_DEBUG_SERVICES: "true"
   FF_NETWORK_PER_BUILD: "true"
 stages:
+  - build_base_image
   - build
   - test
   - deploy
@@ -49,23 +50,12 @@ example_test:
   dependencies: [build]
 
 
-example_service:
+show_boost_version:
   stage:
     test
-  needs: []
-  services:
-    - name: postgres
-      alias: db
-  variables:
-    POSTGRES_DB: custom_db
-    POSTGRES_USER: custom_user
-    POSTGRES_PASSWORD: custom_pass
   script:
-    - apt update && apt install python3 python-is-python3 pip -y
-    - pip install --upgrade pip
-    - pip install "psycopg[binary,pool]"
-    - pip install pgcli
-    - echo "SELECT VERSION();" | pgcli "postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@db:5432/$POSTGRES_DB"
+    - build/programs/tools/show_boost_version
+  dependencies: [build]
 
 
 clang_format:
@@ -88,8 +78,27 @@ cmakelint:
     - find . -not \( -path ./external -prune \) -not \( -path ./libraries/appbase -prune \) -name "CMakeLists.txt" | xargs -I {} cmakelint {}
 
 
+example_service:
+  stage:
+    test
+  needs: []
+  services:
+    - name: postgres
+      alias: db
+  variables:
+    POSTGRES_DB: custom_db
+    POSTGRES_USER: custom_user
+    POSTGRES_PASSWORD: custom_pass
+  script:
+    - apt update && apt install python3 python-is-python3 pip -y
+    - pip install --upgrade pip
+    - pip install "psycopg[binary,pool]"
+    - pip install pgcli
+    - echo "SELECT VERSION();" | pgcli "postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@db:5432/$POSTGRES_DB"
+
+
 bind_build_cxx_boilerplate_image:
-  stage: build
+  stage: build_base_image
   image: docker:23.0.6
   rules:
     - when: manual
