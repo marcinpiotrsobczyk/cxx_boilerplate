@@ -24,20 +24,18 @@ stages:
   - deploy
 
 
-example_build:
+build:
   stage:
     build
   script:
     - apt update && apt install -y git build-essential cmake libboost-all-dev
     - cmake -B build -D CMAKE_BUILD_TYPE=Debug
     - cmake --build build
-    - build/tests/example_test --gtest_shuffle --gtest_repeat=10
-    - sleep 10
   artifacts:
       name: "$CI_JOB_NAME"
       paths:
         - build/tests/example_test
-        - build/tests/second_example_test
+        - build/tests/example2_test
 
 
 example_test:
@@ -45,14 +43,16 @@ example_test:
     test
   script:
     - apt update && apt install python3 python-is-python3 pip -y
-    - time build/tests/second_example_test
-    - time external/gtest-parallel/gtest-parallel build/tests/second_example_test --workers=$(nproc)
-  dependencies: [example_build]
+    - time build/tests/example_test --gtest_shuffle --gtest_repeat=10
+    - time build/tests/example2_test
+    - time external/gtest-parallel/gtest-parallel build/tests/example2_test --workers=$(nproc)
+  dependencies: [build]
 
 
 example_service:
   stage:
     test
+  needs: []
   services:
     - name: postgres
       alias: db
