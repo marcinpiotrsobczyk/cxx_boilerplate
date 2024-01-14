@@ -8,7 +8,7 @@
 
 namespace {} // namespace
 
-TEST(ExampleTest, ExampleTest) {
+TEST(ExampleTest, ExampleInvalidAddressTest) {
   const char *names[] = {"bob", "fred"};
   std::string last_arg = names[2];
 }

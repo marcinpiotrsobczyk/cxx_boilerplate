@@ -1,0 +1,4 @@
+failure-threshold: warning
+ignored:
+  - DL3008  # TODO get rid of this warning
+  - DL3013  # TODO get rid of this warning

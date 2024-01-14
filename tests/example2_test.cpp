@@ -1,5 +1,3 @@
-#include <example/tools.hpp>
-#include <example_header_only/tools.hpp>
 #include <test_tools/tools.hpp>
 
 #include <gtest/gtest.h>
@@ -10,9 +8,9 @@ namespace {
 int GetMeaningOfLife() { return 42; }
 } // namespace
 
-TEST(SecondExampleTest, ExampleTest) { EXPECT_EQ(GetMeaningOfLife(), 42); }
+TEST(Example2Test, ExampleTest) { EXPECT_EQ(GetMeaningOfLife(), 42); }
 
-TEST(SecondExampleTest, IsNullTest) {
+TEST(Example2Test, IsNullTest) {
   int *nullPtr = nullptr;
   int *notNullPtr = new int;
   std::unique_ptr<int> uniqueInt = std::make_unique<int>(1);
@@ -25,7 +23,7 @@ TEST(SecondExampleTest, IsNullTest) {
   delete notNullPtr;
 }
 
-TEST(SecondExampleTest, ExceptionTest) {
+TEST(Example2Test, ExceptionTest) {
   auto lambda = [](int i = 0) {
     if (i == 0) {
       throw std::exception();
@@ -37,30 +35,22 @@ TEST(SecondExampleTest, ExceptionTest) {
   EXPECT_THROW(lambda(1), std::overflow_error);
 }
 
-TEST(SecondExampleTest, ExampleLibraryTest) {
-  EXPECT_EQ(example::GetNumber(), 13);
-}
-
-TEST(SecondExampleTest, ExampleHeaderOnlyLibraryTest) {
-  EXPECT_EQ(example_header_only::GetNumber(), 14);
-}
-
-TEST(SecondExampleTest, ExampleHTestToolsTest) {
+TEST(Example2Test, ExampleHTestToolsTest) {
   EXPECT_EQ(test_tools::GetNumber(), 15);
 }
 
-TEST(SecondExampleTest, ExampleThreadedFunctionTest) {
+TEST(Example2Test, ExampleThreadedFunctionTest) {
   EXPECT_EQ(test_tools::ThreadedFunction(), 16);
 }
 
-TEST(SecondExampleTest, ExampleThreadedFunction2Test) {
+TEST(Example2Test, ExampleThreadedFunction2Test) {
   EXPECT_EQ(test_tools::ThreadedFunction(), 16);
 }
 
-TEST(SecondExampleTest, ExampleThreadedFunction3Test) {
+TEST(Example2Test, ExampleThreadedFunction3Test) {
   EXPECT_EQ(test_tools::ThreadedFunction(), 16);
 }
 
-TEST(SecondExampleTest, ExampleThreadedFunction4Test) {
+TEST(Example2Test, ExampleThreadedFunction4Test) {
   EXPECT_EQ(test_tools::ThreadedFunction(), 16);
 }

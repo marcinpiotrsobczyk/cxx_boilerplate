@@ -53,5 +53,5 @@ jobs:
       - name: Run google tests second
         run: |
           find . -maxdepth 3
-          chmod a+x build/tests/second_example_test
-          build/tests/second_example_test --gtest_repeat=2 --gtest_shuffle
+          chmod a+x build/tests/example2_test
+          build/tests/example2_test --gtest_repeat=2 --gtest_shuffle

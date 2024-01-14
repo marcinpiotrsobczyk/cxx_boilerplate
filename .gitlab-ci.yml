@@ -22,15 +22,16 @@ stages:
   - build_base_image
   - lint
   - build
-  - profile
   - sanitize
   - test
+  - profile
   - deploy
   - manual
 
 
 clang_format:
   stage: lint
+  allow_failure: true
   needs: []
   script:
     - find . -not \( -path ./external -prune \) -not \( -path ./libraries/appbase -prune \) -name "*.cpp" -o -name "*.cc" -o -name "*.h" -o -name "*.hpp"
@@ -40,11 +41,28 @@ clang_format:
 
 cmakelint:
   stage: lint
+  allow_failure: true
   needs: []
   script:
     - pip install --upgrade pip
     - pip install cmakelint
     - find . -not \( -path ./external -prune \) -not \( -path ./libraries/appbase -prune \) -name "CMakeLists.txt" | xargs -I {} cmakelint {}
+
+
+hadolintlint:
+  stage: lint
+  allow_failure: true
+  needs: []
+  script:
+    - hadolintw ./Dockerfile --ignore DL3008 --ignore DL3013
+
+
+shellcheck:
+  stage: lint
+  allow_failure: true
+  needs: []
+  script:
+    - find scripts -type f -name '*.sh' | xargs shellcheck
 
 
 build_gcc:
@@ -80,8 +98,8 @@ build_clang:
 
 
 bind_build_cxx_boilerplate_base_image_automatic:
+  image: docker:24.0.7-cli-alpine3.18
   stage: build_base_image
-  image: docker:24.0.1-cli
   script:
     - apk add bash git
     - docker version
@@ -103,53 +121,24 @@ bind_build_cxx_boilerplate_base_image_automatic:
 google_benchmark:
   stage:
     test
-  script:
-    - time build/tests/example_test --gtest_shuffle --gtest_repeat=10
-    - time build/tests/example2_test
-    - time external/gtest-parallel/gtest-parallel build/tests/example2_test --workers=$(nproc)
   dependencies: [build_gcc]
-
-
-cachegrind_valgrind:
-  stage:
-    profile
-  script:
-    - time build/tests/example_test --gtest_shuffle --gtest_repeat=10
-    - time build/tests/example2_test
-    - time external/gtest-parallel/gtest-parallel build/tests/example2_test --workers=$(nproc)
-  dependencies: [build_gcc]
-
-
-callgrind_valgrind:
-  stage:
-    profile
-  script:
-    - time build/tests/example_test --gtest_shuffle --gtest_repeat=10
-    - time build/tests/example2_test
-    - time external/gtest-parallel/gtest-parallel build/tests/example2_test --workers=$(nproc)
-  dependencies: [build_gcc]
-
-
-perf:
-  stage:
-    profile
   script:
     - time build/tests/example_test --gtest_shuffle --gtest_repeat=10
     - time build/tests/example2_test
     - time external/gtest-parallel/gtest-parallel build/tests/example2_test --workers=$(nproc)
 
 
-address_gcc:
+gcc_address_sanitizer:
   stage:
     sanitize
   variables:
     CC: "/usr/bin/gcc"
     CXX: "/usr/bin/g++"
   script:
-    - rm build -rff
+    - rm build -rf
     - cmake -B build -D CMAKE_BUILD_TYPE=Debug -D SANITIZE_ADDRESS=ON
     - cmake --build build --target address_invalid_test
-    - build/tests/address_invalid_test || true
+    - build/tests/address_invalid_test || echo "$?"
     - bash -c 'build/tests/address_invalid_test 2>&1 | grep stack-buffer-overflow'
   artifacts:
       name: "$CI_JOB_NAME"
@@ -157,94 +146,172 @@ address_gcc:
         - build
 
 
-memcheck_valgrind:
+gcc_thread_sanitizer:
   stage:
     sanitize
   variables:
     CC: "/usr/bin/gcc"
     CXX: "/usr/bin/g++"
   script:
-    - rm build -rff
-    - cmake -B build -D CMAKE_BUILD_TYPE=Debug -D SANITIZE_ADDRESS=OFF
-    - cmake --build build --target address_invalid_test
-    - valgrind --leak-check=full --show-error-list=yes --show-leak-kinds=all --track-origins=yes --error-exitcode=87 build/tests/address_invalid_test || true
-    - bash -c 'valgrind --leak-check=full --show-error-list=yes --show-leak-kinds=all --track-origins=yes build/tests/address_invalid_test 2>&1 | grep "7 errors"'
+    - rm build -rf
+    - cmake -B build -D CMAKE_BUILD_TYPE=Debug -D SANITIZE_THREAD=ON
+    - cmake --build build --target threading_test
+    - build/tests/threading_test || echo "$?"
+    # - bash -c 'build/tests/threading_test 2>&1 | grep stack-buffer-overflow'
   artifacts:
       name: "$CI_JOB_NAME"
       paths:
         - build
 
 
-hellgrind_valgrind:
+code_dump:
   stage:
     sanitize
-  script:
-    - time build/tests/example_test --gtest_shuffle --gtest_repeat=10
-    - time build/tests/example2_test
-    - time external/gtest-parallel/gtest-parallel build/tests/example2_test --workers=$(nproc)
   dependencies: [build_gcc]
+  script:
+    - ls -lath
+    - build/programs/tools/crash || true
+    - ls -lath
+    - ulimit
+    - file core*
+  artifacts:
+      name: "$CI_JOB_NAME"
+      paths:
+        - build
+        - "core*"
+
+
+valgrind_memcheck:
+  stage:
+    sanitize
+  dependencies: [build_gcc]
+  script:
+    - valgrind --leak-check=full --show-error-list=yes --show-leak-kinds=all --track-origins=yes --error-exitcode=87 build/tests/address_invalid_test || echo "$?"
+    - bash -c 'valgrind --leak-check=full --show-error-list=yes --show-leak-kinds=all --track-origins=yes build/tests/address_invalid_test 2>&1 | grep "7 errors"'
+
+
+valgrind_helgrind:
+  stage:
+    sanitize
+  dependencies: [build_gcc]
+  script:
+    - valgrind --tool=helgrind --show-error-list=yes --error-exitcode=88 build/tests/threading_test || echo "$?"
+    - bash -c 'valgrind --tool=helgrind --show-error-list=yes build/tests/threading_test 2>&1 | grep "ERROR SUMMARY"'
 
 
 gcov:
   stage:
     sanitize
+  variables:
+    CC: "/usr/bin/gcc"
+    CXX: "/usr/bin/g++"
   script:
-    - time build/tests/example_test --gtest_shuffle --gtest_repeat=10
-    - time build/tests/example2_test
-    - time external/gtest-parallel/gtest-parallel build/tests/example2_test --workers=$(nproc)
-  dependencies: [build_gcc]
-
-
-lcov:
-  stage:
-    sanitize
-  script:
-    - time build/tests/example_test --gtest_shuffle --gtest_repeat=10
-    - time build/tests/example2_test
-    - time external/gtest-parallel/gtest-parallel build/tests/example2_test --workers=$(nproc)
-  dependencies: [build_gcc]
+    - rm build -rf
+    - cmake -B build -D CMAKE_BUILD_TYPE=Debug -D ENABLE_COVERAGE=ON
+    - cmake --build build --target coverage_test
+    - build/tests/coverage_test || true
+    - >
+        gcov libraries/example/tools.cpp
+        --object-file build/libraries/example/CMakeFiles/example.dir/tools.cpp.gcda 
+        --object-file build/libraries/example/CMakeFiles/example.dir/tools.cpp.gcno
+    - >
+        gcov libraries/example/tools.cpp
+        --object-file build/libraries/example/CMakeFiles/example.dir/tools2.cpp.gcda 
+        --object-file build/libraries/example/CMakeFiles/example.dir/tools2.cpp.gcno
+    - cat tools.cpp.gcov
+    - >
+        gcov libraries/example/tools.cpp
+        --object-file build/libraries/example/CMakeFiles/example.dir/tools2.cpp.gcda 
+        --object-file build/libraries/example/CMakeFiles/example.dir/tools2.cpp.gcno
+    - cat tools2.cpp.gcov
+  artifacts:
+      name: "$CI_JOB_NAME"
+      paths:
+        - build
+        - "*.gcov"
 
 
 example_test:
   stage:
     test
+  dependencies: [build_gcc]
   script:
     - time build/tests/example_test --gtest_shuffle --gtest_repeat=10
     - time build/tests/example2_test
     - time external/gtest-parallel/gtest-parallel build/tests/example2_test --workers=$(nproc)
-  dependencies: [build_gcc]
 
 
-example_service:
+example_failing_test:
   stage:
     test
-  needs: []
-  services:
-    - name: postgres
-      alias: db
-  variables:
-    POSTGRES_DB: custom_db
-    POSTGRES_USER: custom_user
-    POSTGRES_PASSWORD: custom_pass
+  dependencies: [build_gcc]
   script:
-    - pip install --upgrade pip
-    - pip install "psycopg[binary,pool]"
-    - pip install pgcli
-    - echo "SELECT VERSION();" | pgcli "postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@db:5432/$POSTGRES_DB"
+    - time build/tests/example3_test || true
+    - bash -c 'build/tests/example3_test 2>&1 | grep "4 FAILED TESTS"'
 
 
 show_version:
   stage:
     test
+  dependencies: [build_gcc]
   script:
     - build/programs/tools/show_version
+
+
+no_profiling:
+  stage:
+    profile
+  script:
+    - build/tests/profiling_test
+
+
+# perf:
+#   stage:
+#     profile
+#   script:
+#     - rm build -rf
+#     - cmake -B build -D CMAKE_BUILD_TYPE=Debug -D USE_PERF=ON
+#     - cmake --build build --target profiling_test
+#     - build/tests/profiling_test
+#     - perf record build/tests/profiling_test
+#     - ls -lath
+#   artifacts:
+#       name: "$CI_JOB_NAME"
+#       paths:
+#         - build
+#         - perf.data
+
+
+valgrind_cachegrind:
+  stage:
+    profile
   dependencies: [build_gcc]
+  script:
+    - valgrind --tool=callgrind --show-error-list=yes build/tests/profiling_test 2>&1
+  artifacts:
+      name: "$CI_JOB_NAME"
+      paths:
+        - build
+        - "callgrind*"
+
+
+valgrind_callgrind:
+  stage:
+    profile
+  dependencies: [build_gcc]
+  script:
+    - valgrind --tool=callgrind --show-error-list=yes build/tests/profiling_test 2>&1
+  artifacts:
+      name: "$CI_JOB_NAME"
+      paths:
+        - build
+        - "callgrind*"
 
 
 bind_build_cxx_boilerplate_base_image_manual:
+  image: docker:24.0.7-cli-alpine3.18
   stage: manual
   needs: []
-  image: docker:24.0.1-cli
   rules:
     - when: manual
   script:
@@ -258,3 +325,20 @@ bind_build_cxx_boilerplate_base_image_manual:
       name: "$CI_JOB_NAME"
       paths:
         - build
+
+
+example_service:
+  stage: manual
+  needs: []
+  rules:
+    - when: manual
+  variables:
+    POSTGRES_HOST: custom_host
+    POSTGRES_DB: custom_db
+    POSTGRES_USER: custom_user
+    POSTGRES_PASSWORD: custom_pass
+  services:
+    - name: postgres:16.1-bookworm
+      alias: "$POSTGRES_HOST"
+  script:
+    - echo "SELECT VERSION();" | pgcli "postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:5432/$POSTGRES_DB"

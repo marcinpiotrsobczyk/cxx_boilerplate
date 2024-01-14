@@ -1,6 +1,7 @@
 FROM ubuntu:22.04 AS cxx_boilerplate_base_image
 
-RUN apt update && apt install -y \
+
+RUN apt-get update && apt-get install --no-install-recommends -y \
     git \
     cmake \
     make \
@@ -35,12 +36,27 @@ RUN apt update && apt install -y \
     postgresql-client \
     xvfb \
     gdb \
-    valgrind && rm -rf /var/lib/apt/lists/*
+    valgrind \
+    file \
+    shellcheck && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && apt-get install --no-install-recommends -y \
+    linux-tools-common \
+    linux-tools-generic \
+    linux-tools-6.5.0-14-generic \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN wget -O /bin/hadolint https://github.com/hadolint/hadolint/releases/download/v1.16.3/hadolint-Linux-x86_64
+
+RUN chmod +x /bin/hadolint
+
+RUN pip install --no-cache-dir --upgrade pip "psycopg[binary,pool]" pgcli hadolintw
 
 FROM cxx_boilerplate_base_image AS build
 
+WORKDIR /src 
 COPY . /src
-RUN cd /src && git clean -xfd
+RUN git clean -xfd
 RUN cmake -S /src -B /build -D CMAKE_BUILD_TYPE=Debug && cmake --build /build
 
 FROM cxx_boilerplate_base_image AS cxx_boilerplate_image

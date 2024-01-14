@@ -33,3 +33,10 @@
 build
 .vscode
 config-dir
+*.gcno
+*.gcda
+*.gcov
+callgrind.out.*
+cachegrind.out.*
+perf.data
+perf.data.old

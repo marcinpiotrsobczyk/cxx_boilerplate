@@ -13,7 +13,7 @@ int GetNumber() { return 15; }
 int ThreadedFunction() {
   using namespace std::chrono_literals;
   auto lambda = []() {
-    std::this_thread::sleep_for(5000ms);
+    std::this_thread::sleep_for(1000ms);
     return 16;
   };
   int value = lambda();
