@@ -38,7 +38,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     gdb \
     valgrind \
     file \
-    shellcheck && rm -rf /var/lib/apt/lists/*
+    shellcheck \
+    ninja-build && rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && apt-get install --no-install-recommends -y \
     linux-tools-common \

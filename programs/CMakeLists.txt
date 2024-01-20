@@ -1,4 +1,7 @@
 add_subdirectory(example_application)
+add_subdirectory(example_allocator)
+add_subdirectory(example_benchmark)
+add_subdirectory(example_spdlog)
 add_subdirectory(example_cli)
 add_subdirectory(parse)
 add_subdirectory(print_hello)
