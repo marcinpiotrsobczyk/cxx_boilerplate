@@ -110,7 +110,7 @@ bind_build_cxx_boilerplate_base_image_automatic:
       else
         $CI_PROJECT_DIR/scripts/build_ci_base_image.sh $CI_COMMIT_SHA 
       fi
-    - $CI_PROJECT_DIR/scripts/export-binaries.sh cxx_boilerplate_image $CI_PROJECT_DIR/build
+    - $CI_PROJECT_DIR/scripts/export_binaries.sh cxx_boilerplate_image $CI_PROJECT_DIR/build
     - docker builder prune --force
 
 
@@ -317,7 +317,7 @@ bind_build_cxx_boilerplate_base_image_manual:
     - docker version
     - docker context ls
     - $CI_PROJECT_DIR/scripts/build_ci_base_image.sh $CI_COMMIT_SHA 
-    - $CI_PROJECT_DIR/scripts/export-binaries.sh cxx_boilerplate_image:$CI_COMMIT_SHA $CI_PROJECT_DIR/build
+    - $CI_PROJECT_DIR/scripts/export_binaries.sh cxx_boilerplate_image:$CI_COMMIT_SHA $CI_PROJECT_DIR/build
     - docker builder prune --force
 
 

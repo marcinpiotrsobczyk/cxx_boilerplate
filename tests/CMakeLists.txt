@@ -29,4 +29,9 @@ if(BUILD_TESTING)
     target_link_libraries(benchmarking_test PUBLIC example)
     target_link_libraries(benchmarking_test PUBLIC test_tools)
 
+    add_test(
+        NAME example.Test
+        COMMAND date
+    )
+
 endif()
