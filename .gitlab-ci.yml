@@ -240,6 +240,15 @@ example_failing_test:
     - bash -c 'build/tests/example3_test 2>&1 | grep "4 FAILED TESTS"'
 
 
+example_segment_manager:
+  stage:
+    test
+  dependencies: [build_gcc]
+  script:
+    - build/tests/allocator_test
+    - build/tests/allocator_test
+
+
 example_spdlog:
   stage:
     test

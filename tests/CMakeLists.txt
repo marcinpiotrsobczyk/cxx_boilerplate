@@ -1,6 +1,18 @@
 if(BUILD_TESTING)
     add_subdirectory(test_tools)
 
+    set(BOOST_COMPONENTS)
+    list(APPEND BOOST_COMPONENTS
+        atomic
+        chrono
+        date_time
+        filesystem
+        program_options
+        system)
+    find_package( Boost 1.74 REQUIRED COMPONENTS ${BOOST_COMPONENTS} )
+
+
+
     link_libraries(cxx_setup GTest::gtest_main)
 
     add_executable(example_test example_test.cpp)
@@ -28,6 +40,10 @@ if(BUILD_TESTING)
     add_executable(benchmarking_test benchmarking_test.cpp)
     target_link_libraries(benchmarking_test PUBLIC example)
     target_link_libraries(benchmarking_test PUBLIC test_tools)
+
+    add_executable(allocator_test allocator_test.cpp)
+    target_link_libraries(allocator_test PUBLIC example)
+    target_link_libraries(allocator_test PUBLIC Boost::filesystem)
 
     add_test(
         NAME example.Test
