@@ -3,11 +3,11 @@ name: Unit tests
 on: [push]
 
 env:
-  IMAGE_NAME: ubuntu
+  IMAGE_NAME: ubuntu:22.04
 
 jobs:
   build_and_test:
-    runs-on: ubuntu-latest
+    runs-on: $IMAGE_NAME
 
     env:
       CC: gcc
@@ -36,7 +36,7 @@ jobs:
 
   second_test:
     needs: build_and_test
-    runs-on: ubuntu-latest
+    runs-on: $IMAGE_NAME
 
     env:
       CC: gcc
